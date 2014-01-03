@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+
+<html>
+
+	<body>
+	</body>
+	
+	<script>
+	
+		var ctx = document.createElement("canvas").getContext("2d");
+		var width  = ctx.width  = ctx.canvas.width  = 640;
+		var height = ctx.height = ctx.canvas.height = 480;
+		
+		document.body.appendChild(ctx.canvas);
+		
+		ctx.translate(width / 2, height / 2);
+		
+		var n = 256;
+		var golden_apple = Math.PI * (3 - Math.sqrt(5));
+		
+		for (var i = 0; i < n; i++) {
+			
+			var theta = i * golden_apple;
+			var r = Math.sqrt(i) / Math.sqrt(n);
+			
+			ctx.beginPath();
+				ctx.arc(240 * r * Math.cos(theta), 240 * r * Math.sin(theta), 2, 0, 2 * Math.PI);
+			ctx.fill();
+			
+			
+		}
+	
+	</script>
+
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+
+<html>
+
+	<body>
+		<canvas width = "900px" height = "600px"></canvas>
+	</body>
+	
+	<script>
+	
+		var types = [
+			"source-over",      "source-in",      "source-out",      "source-atop",
+			"destination-over", "destination-in", "destination-out", "destination-atop",
+			"lighter",          "darker",         "copy",            "xor"
+		];
+	
+		var ctx = document.getElementsByTagName("canvas")[0].getContext("2d");
+		var width  = ctx.canvas.width;
+		var height = ctx.canvas.height;
+		
+		var ctx2 = document.createElement("canvas").getContext("2d");
+		var w = ctx2.canvas.width  = ctx2.width  = width  / 4;
+		var h = ctx2.canvas.height = ctx2.height = height / 3;
+		ctx2.textBaseline = "top";
+		ctx2.textAlign = "center";
+		
+		var r = w / 4;
+		
+		var g1 = ctx2.createLinearGradient(-w / 4, 0, w / 4, 0);
+		g1.addColorStop(   0, "rgba(255, 0, 0, 1)");
+		g1.addColorStop(0.25, "rgba(255, 0, 0, 0)");
+		g1.addColorStop(0.75, "rgba(255, 0, 0, 0)");
+		g1.addColorStop(   1, "rgba(255, 0, 0, 1)");
+		var g2 = ctx2.createLinearGradient(0, -h / 4, 0, h / 4);
+		g2.addColorStop(   0, "rgba(255, 0, 0, 1)");
+		g2.addColorStop( 0.5, "rgba(255, 0, 0, 1)");
+		g2.addColorStop( 0.5, "rgba(255, 0, 0, 0)");
+		g2.addColorStop(0.75, "rgba(255, 0, 0, 0)");
+		g2.addColorStop(   1, "rgba(255, 0, 0, 1)");
+		var g3 = ctx2.createRadialGradient(0, 0, 0, 0, 0, r);
+		g3.addColorStop(  0, "rgba(0, 128, 128, 0)");
+		g3.addColorStop(0.5, "rgba(0, 128, 128, 0)");
+		g3.addColorStop(  1, "rgba(0, 128, 128, 1)");
+		var g4 = "rgb(0, 128, 128);"
+		
+		
+		for (var i = 0; i < types.length; i++) {
+		
+			ctx2.clearRect(0, 0, w, h);
+			
+			ctx2.save();
+			
+				ctx2.translate(w / 2, h / 2);
+				
+				ctx2.fillStyle = g1;
+				ctx2.fillRect(-w/4, -h/4, w/2, h/2);
+				ctx2.fillStyle = g2;
+				ctx2.fillRect(-w/4, -h/4, w/2, h/2);
+				
+				ctx2.translate(r, r);
+				
+				ctx2.globalCompositeOperation = types[i];
+				
+				ctx2.fillStyle = g3;
+				ctx2.beginPath();
+					ctx2.arc(0, 0, r, 0, 2 * Math.PI);
+				//ctx2.fill();
+				
+				//ctx2.translate(-2 * r, 0);
+				
+				//ctx2.fillStyle = g4;
+				//ctx2.beginPath();
+					ctx2.arc(-2 * r, 0, r, 0, 2 * Math.PI);
+				ctx2.fill();
+				
+			ctx2.restore();
+			
+			ctx2.strokeRect(0.5, 0.5, w - 0.5, h - 0.5);
+			ctx2.fillText(types[i], w / 2, 0);
+			
+			var x =  (i % 4) * w;
+			var y = ((i / 4) | 0) * h;
+			ctx.drawImage(
+				ctx2.canvas, x, y, w, h
+			);
+			
+		}
+		
+	
+	</script>
+
+</html>

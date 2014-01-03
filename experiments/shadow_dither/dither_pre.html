@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+
+	<head>
+
+		<title>Dither test 2</title>
+
+		<style>
+
+
+
+		</style>
+
+	</head>
+
+
+
+	<body>
+		
+		
+		
+		<script src = "blur.js"></script>
+		
+		<script>
+
+			var FPS    = 60;
+			
+			var WIDTH  = 640;
+			var HEIGHT = 480;
+
+			var BLUR_RADIUS = 10;
+			var FADING_SPEED  = 1;
+			
+			
+			var ctx = document.getElementsByTagName("canvas")[0].getContext("2d");
+			ctx.width  = ctx.canvas.width  = WIDTH;
+			ctx.height = ctx.canvas.height = HEIGHT;
+
+			document.body.appendChild(ctx.canvas);
+
+
+			var stencil = document.getElementsByTagName("canvas")[0].getContext("2d");
+			stencil.width  = stencil.canvas.width  = WIDTH;
+			stencil.height = stencil.canvas.height = HEIGHT;
+
+			document.body.appendChild(stencil.canvas);
+
+
+
+			ctx.fillRect(0, 0, width, height);
+			
+			
+			var mainThreadId = setInterval(function(){
+			
+				stencil.clearRect(0, 0, width, height);
+
+
+
+
+				var a = ctx.getImageData(0, 0, width, height);
+				var b = stencil.getImageData(0, 0, width, height);
+				var fade = 255 * 1 / (FPS * FADING_SPEED);
+				for (var i = 0, n = a.data.length; i < n; i += 4) {
+					a.data[i] = Math.max(
+						a.data[i] - fade,
+						b.data[i]
+					);
+				}
+				ctx.acc.putImageData(a, 0, 0);
+
+
+				blurContextR(ctx, 0, 0, width, height, BLUR_RADIUS);
+			
+				
+			
+			}, 1000.0 / FPS);
+
+
+
+
+
+		</script>
+
+	</body>
+
+</html>

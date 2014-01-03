@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+
+<html>
+	
+	<head>
+		
+		<title>Template</title>
+		
+		<style>
+			
+			html, body {
+				width:  100%;
+				height: 100%;
+				display: table;
+			}
+			
+			body {
+				display: table-cell;
+				text-align: center;
+				vertical-align: middle;
+			}
+			
+			canvas {
+				border: 1px solid black;
+			}
+			
+		</style>
+		
+	</head>
+	
+	
+	
+	<body>
+	
+		
+	
+	</body>
+	
+	
+	
+	<script>
+		
+		var ctx = document.createElement("canvas").getContext("2d");
+		var width  = ctx.width  = ctx.canvas.width  = 640;
+		var height = ctx.height = ctx.canvas.height = 480;
+		document.body.appendChild(ctx.canvas);
+		
+		ctx.fillStyle = "#000";
+		ctx.fillRect(0, 0, width, height);
+		var a = ctx.getImageData(width / 2 - 25, height / 2 - 25, 50, 50);
+		
+		ctx.clearRect(0, 0, width, height);
+		
+		ctx.fillRect(10, 10, 50, 50);
+		
+		var x = 0;
+		var step = 50;
+		var hh = height / 2 - 25;
+		ctx.putImageData(a, x, hh + 0.00); x += step;
+		ctx.putImageData(a, x, hh + 0.25); x += step;
+		ctx.putImageData(a, x, hh + 0.50); x += step;
+		ctx.putImageData(a, x, hh + 0.75); x += step;
+		ctx.putImageData(a, x, hh + 1.00); x += step;
+		ctx.putImageData(a, x, hh + 0.00); x += step;
+		
+		ctx.drawImage(ctx.canvas, 0, 0, 70, 70, x - 10, hh + 0.00 - 10, 70, 70); x += step;
+		ctx.drawImage(ctx.canvas, 0, 0, 70, 70, x - 10, hh + 0.25 - 10, 70, 70); x += step;
+		ctx.drawImage(ctx.canvas, 0, 0, 70, 70, x - 10, hh + 0.50 - 10, 70, 70); x += step;
+		ctx.drawImage(ctx.canvas, 0, 0, 70, 70, x - 10, hh + 0.75 - 10, 70, 70); x += step;
+		ctx.drawImage(ctx.canvas, 0, 0, 70, 70, x - 10, hh + 1.00 - 10, 70, 70); x += step;
+		ctx.drawImage(ctx.canvas, 0, 0, 70, 70, x - 10, hh + 0.00 - 10, 70, 70); x += step;
+		
+		
+	</script>
+	
+</html>

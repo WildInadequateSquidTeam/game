@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+
+    <head>
+
+        <title></title>
+
+        <style>
+
+
+
+        </style>
+
+    </head>
+
+
+
+    <body>
+        
+         
+        
+        
+        
+        <script>
+
+            var game = {
+                physics: {
+                    tasks: [],
+                    queue: [],
+                    selectDragndropObject: function(x, y) {
+                        console.log("Selecting obj at " + x + ":" + y);
+                    },
+                    updateDragndropObject: function(dx, dy) {
+                        console.log("Updating obj by " + dx + ":" + dy);
+                    },
+                    releaseDragndropObject: function() {
+                        console.log("Releasing obj");
+                    }
+                }
+            };
+
+            game.physics.tasks.__proto__.add = function(e) {
+                this[e] = e;
+            };
+
+            game.physics.tasks.__proto__.remove = function(e) {
+                delete this[e];
+            };
+
+
+
+            function onDNDEvent(e) {
+
+                if (e.state == "drag_start") {
+                    // detect selected object
+                    game.physics.queue.push(function() {
+                        game.physics.selectDragndropObject(e.x, e.y);
+                    });
+                    game.physics.tasks.add(function() {
+                        var data = e.updateDNDInfo();
+                        game.physics.updateDragndropObject(data.dx, data.dy);
+                    });
+                } else
+                if (e.state != "drag_move") {
+                    // release selected object
+                    game.physics.tasks.remove(function() {
+                        var data = e.updateDNDInfo();
+                        game.physics.updateDragndropObject(data.dx, data.dy);
+                    });
+                    game.physics.queue.push(function() {
+                        game.physics.releaseDragndropObject(e.x, e.y);
+                    });
+                }
+                    
+            }
+
+            var event_data = {
+                state: "drag_start",
+                x: 0,
+                y: 0,
+                dx: 0,
+                dy: 0,
+                updateDNDInfo: function() {
+                    return {dx: this.dx, dy: this.dy};
+                }
+            };
+
+
+            function emulatePhysCycle() {
+                if (game.physics.queue.length > 0) {
+                    game.physics.queue.pop().call();
+                }
+                for (var key in game.physics.tasks) {
+                    if (game.physics.tasks.hasOwnProperty(key)) {
+                        console.log("calling key: ");
+                        console.log(key);
+                        game.physics.tasks[key].call();
+                    }
+                }
+                //game.physics.tasks.forEach(function(e) { e.call(game.physics); });
+            }
+
+
+            emulatePhysCycle();
+
+            // emulate dnd event
+            event_data.state = "drag_start";
+            event_data.x = 15;
+            event_data.y = 42;
+            onDNDEvent(event_data);
+            event_data.state = "drag_move";
+            onDNDEvent(event_data);
+            onDNDEvent(event_data);
+            onDNDEvent(event_data);
+
+            emulatePhysCycle();
+
+            onDNDEvent(event_data);
+            onDNDEvent(event_data);
+
+            emulatePhysCycle();
+
+            onDNDEvent(event_data);
+            event_data.state = "drag_end";
+            onDNDEvent(event_data);
+
+            emulatePhysCycle();
+
+
+        </script>
+
+    </body>
+
+</html>

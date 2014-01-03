@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+	<head>
+	
+		<style type = "text/css">
+			canvas {
+				border: 1px solid black;
+			}
+		</style>
+	
+	</head>
+	<body></body>
+	
+	<script src = "graphicalInput.js"></script>
+	
+	<script>
+		
+		var grInput = new GraphicalInput(500, 500);
+		document.body.appendChild(grInput);
+		grInput.onchange = function(data) {
+			console.log(data);
+		};
+		
+	</script>
+</html>

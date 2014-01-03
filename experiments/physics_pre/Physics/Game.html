@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<!-- saved from url=(0049)https://dl.dropbox.com/u/10932081/game/index.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+	
+		<title>Game</title>
+		
+		<style type="text/css">
+		
+			* {
+				margin: 0;
+				padding: 0;
+				font-family: sans-serif;
+			}
+		
+			html, body {
+				width: 100%;
+				height: 100%;
+				display: table;
+			}
+			
+			body {
+				text-align: center;
+				display: table-cell;
+				vertical-align: middle;
+			}
+			
+			div#graphicsContainer {
+				text-align: left;
+				display: inline-block;
+				position: relative;
+				width: 640px;
+				height: 480px;
+				border: 1px solid black;
+				border-radius: 7.5px;
+				overflow: hidden;
+			}
+			
+			div#graphicsContainer > * {
+				position: absolute;
+			}
+			
+			div#backgroundsContainer,
+			div#foregroundsContainer {
+				width: 640px;
+				height: 480px;
+				//display: none;
+			}
+			
+			div#backgroundsContainer > *,
+			div#foregroundsContainer > * {
+				position: absolute;
+			}
+			
+			canvas#main {
+				//display: none;
+			}
+			
+			div#debug {
+				text-align: left;
+				text-shadow: #ffffff 0px 0px 10px;
+				width: 150%;
+				max-height: 50px;
+				font-size: 15px;
+				overflow-y: scroll;
+				overflow-x: hidden;
+			}
+			div#debug.active {
+				max-height: 150px;
+			}
+			
+			
+			div#loading {
+				background: #aaf;
+				color: #fff;
+				font-size: 25px;
+				font-weight: bold;
+				width: 100%;
+				height: 100%;
+				display: table;
+			}
+			@-webkit-keyframes loading {
+				from { opacity: 1; }
+				to   { opacity: 0; }
+			}
+			div#loading.loaded {
+				-webkit-animation-name: loading;
+				-webkit-animation-duration: 1s;
+				-webkit-animation-timing-function: ease-in;
+			}
+			div#loading > div {
+				display: table-cell;
+				vertical-align: middle;
+				text-align: center;
+			}
+			
+			
+		</style>
+	
+	</head>
+	
+	
+	
+	<body>
+	
+		<audio id="mus" src="./music/t1.mp3"></audio>
+	
+		<h1>Game</h1>
+		<div id="graphicsContainer">
+			<div id="backgroundsContainer"><canvas width="1000px" height="1000px" style="z-index: -1; left: -180px; top: -260px; "></canvas><canvas width="1000px" height="1000px" style="z-index: -2; left: -180px; top: -260px; "></canvas></div>
+			<canvas id="main" width="640" height="480">Sorry, your browser doesn't support HTML5</canvas>
+			<div id="foregroundsContainer"></div>
+			<div id="debug">[19:06:07] Logger established<br>[19:06:08] Connection lost<br></div>
+			<div id="loading" class="loaded" style="display: none; "><div>Loading, please wait...</div></div>
+		<canvas width="640px" height="480px" style="width: 640px; height: 480px; display: none; "></canvas></div>
+		<br>
+		© 2012, DNA Team
+		
+	
+	
+	
+	
+	<!-- Imporing box2d js -->
+		<script src="./Game_files/prototype-1.6.0.2.js"></script>
+		<script src="./Game_files/b2Settings.js"></script>
+		<script src="./Game_files/b2Vec2.js"></script>
+		<script src="./Game_files/b2Mat22.js"></script>
+		<script src="./Game_files/b2Math.js"></script>
+		<script src="./Game_files/b2AABB.js"></script>
+		<script src="./Game_files/b2Bound.js"></script>
+		<script src="./Game_files/b2BoundValues.js"></script>
+		<script src="./Game_files/b2Pair.js"></script>
+		<script src="./Game_files/b2PairCallback.js"></script>
+		<script src="./Game_files/b2BufferedPair.js"></script>
+		<script src="./Game_files/b2PairManager.js"></script>
+		<script src="./Game_files/b2BroadPhase.js"></script>
+		<script src="./Game_files/b2Collision.js"></script>
+		<script src="./Game_files/Features.js"></script>
+		<script src="./Game_files/b2ContactID.js"></script>
+		<script src="./Game_files/b2ContactPoint.js"></script>
+		<script src="./Game_files/b2Distance.js"></script>
+		<script src="./Game_files/b2Manifold.js"></script>
+		<script src="./Game_files/b2OBB.js"></script>
+		<script src="./Game_files/b2Proxy.js"></script>
+		<script src="./Game_files/ClipVertex.js"></script>
+		<script src="./Game_files/b2Shape.js"></script>
+		<script src="./Game_files/b2ShapeDef.js"></script>
+		<script src="./Game_files/b2BoxDef.js"></script>
+		<script src="./Game_files/b2CircleDef.js"></script>
+		<script src="./Game_files/b2CircleShape.js"></script>
+		<script src="./Game_files/b2MassData.js"></script>
+		<script src="./Game_files/b2PolyDef.js"></script>
+		<script src="./Game_files/b2PolyShape.js"></script>
+		<script src="./Game_files/b2Body.js"></script>
+		<script src="./Game_files/b2BodyDef.js"></script>
+		<script src="./Game_files/b2CollisionFilter.js"></script>
+		<script src="./Game_files/b2Island.js"></script>
+		<script src="./Game_files/b2TimeStep.js"></script>
+		<script src="./Game_files/b2ContactNode.js"></script>
+		<script src="./Game_files/b2Contact.js"></script>
+		<script src="./Game_files/b2ContactConstraint.js"></script>
+		<script src="./Game_files/b2ContactConstraintPoint.js"></script>
+		<script src="./Game_files/b2ContactRegister.js"></script>
+		<script src="./Game_files/b2ContactSolver.js"></script>
+		<script src="./Game_files/b2CircleContact.js"></script>
+		<script src="./Game_files/b2Conservative.js"></script>
+		<script src="./Game_files/b2NullContact.js"></script>
+		<script src="./Game_files/b2PolyAndCircleContact.js"></script>
+		<script src="./Game_files/b2PolyContact.js"></script>
+		<script src="./Game_files/b2ContactManager.js"></script>
+		<script src="./Game_files/b2World.js"></script>
+		<script src="./Game_files/b2WorldListener.js"></script>
+		<script src="./Game_files/b2JointNode.js"></script>
+		<script src="./Game_files/b2Joint.js"></script>
+		<script src="./Game_files/b2JointDef.js"></script>
+		<script src="./Game_files/b2DistanceJoint.js"></script>
+		<script src="./Game_files/b2DistanceJointDef.js"></script>
+		<script src="./Game_files/b2Jacobian.js"></script>
+		<script src="./Game_files/b2GearJoint.js"></script>
+		<script src="./Game_files/b2GearJointDef.js"></script>
+		<script src="./Game_files/b2MouseJoint.js"></script>
+		<script src="./Game_files/b2MouseJointDef.js"></script>
+		<script src="./Game_files/b2PrismaticJoint.js"></script>
+		<script src="./Game_files/b2PrismaticJointDef.js"></script>
+		<script src="./Game_files/b2PulleyJoint.js"></script>
+		<script src="./Game_files/b2PulleyJointDef.js"></script>
+		<script src="./Game_files/b2RevoluteJoint.js"></script>
+		<script src="./Game_files/b2RevoluteJointDef.js"></script>
+	<!----------------------->
+		<script src="./phys.js"></script>
+			
+	<!-- Importing blur -->
+		<script src="./Game_files/blur.js"></script>
+		<!--<script src = "https://dl.dropbox.com/u/10932081/shadows/blur.js"></script>-->
+	<!-------------------->
+	
+	
+	
+	<script>
+	
+		// Tools
+		
+		function max(a, b) { return (a > b) ? a : b; }
+		function min(a, b) { return (a < b) ? a : b; }
+		
+		// Logger
+		var log = new (function(id) {
+			this.element = document.getElementById(id);
+			this.add = function(msg) {
+				this.element.innerText += "[" + (new Date()).toLocaleTimeString() + "] " + msg;
+				this.element.appendChild(document.createElement("br"));
+				this.element.scrollTop += this.element.scrollHeight;
+			};
+			this.active = false;
+			this.switch = function() {
+				this.element.className = this.active ? "" : "active";
+				this.active = !this.active;
+				this.element.scrollTop += this.element.scrollHeight;
+			};
+			this.add("Logger established");
+		})("debug");
+		
+		// Images loader
+		var imagesLoader = {
+			list: [],
+			add: function(obj) {
+				this.list.push(obj);
+			},
+			completed: function() {
+				for (var i = 0; i < this.list.length; i++) {
+					if (this.list[i].complete == false)
+						return false;
+				}
+				return true;
+			}
+		}
+	
+	
+	
+		// Load data
+		var background = new Image();
+		background.src = "./background.jpg";
+		imagesLoader.add(background);
+		
+		
+		
+		// Establish connection
+		var ws = new WebSocket("ws://127.0.0.1:8080");
+		ws.connectionEstablished = false;
+		ws.onopen = function() {
+			log.add("Connected to " + ws.url);
+		};
+		ws.onerror = function() {
+			log.add("Connection could not be established");
+		};
+		ws.onclose = function() {
+			log.add("Connection lost");
+		};
+		
+		
+
+		// Some constants
+		
+		var RESOLUTION_WIDTH  = 640;
+		var RESOLUTION_HEIGHT = 480;
+		
+		
+		var FPS               = 60;
+		
+		
+		var controls = {
+			mouse: {
+				x: 0,
+				y: 0,
+				btnState: 0,
+				last_x: 0,
+				last_y: 0
+			},
+			ball: {
+				x: 0,
+				y: 0,
+				btnState: 0,
+				last_x: 0,
+				last_y: 0
+			},
+			keyState: 0
+		};
+		var camera = {
+			position: {
+				x: 0,
+				y: 0,
+				fixed_x: 0,
+				fixed_y: 0,
+				last_x: 0,
+				last_y: 0
+				/*fix: function() {
+					this.fixed_x = this.x;
+					this.fixed_y = this.y;
+				},
+				release: function() {
+					this.last_x = this.fixed_x;
+					this.last_y = this.fixed_y;
+				}*/
+			}
+		};
+		var MOUSE_LMB   = 1;
+		var MOUSE_RMB   = 2;
+		var MOUSE_MMB   = 4;
+		var KEY_LEFT    = 1;
+		var KEY_RIGHT   = 2;
+		var KEY_UP      = 4;
+		var KEY_DOWN    = 8;
+		var KEY_ACTION1 = 16;
+		var KEY_ACTION2 = 32;
+		var KEY_ACTION3 = 64;
+		var KEY_ACTION4 = 128;
+		
+		
+		
+		// Init graphics
+		var ctx  = document.getElementById("main").getContext("2d");
+		var width  = ctx.canvas.width;
+		var height = ctx.canvas.height;
+		
+		// Creating canvas for shadows
+		var SHADOWS_PIXELATION = 8;
+		var SHADOWS_RESERVE = 2;
+		var shadows = document.createElement("canvas");
+		shadows.setAttribute("width",  ((width  * SHADOWS_RESERVE / SHADOWS_PIXELATION) | 0) + "px");
+		shadows.setAttribute("height", ((height * SHADOWS_RESERVE / SHADOWS_PIXELATION) | 0) + "px");
+		shadows.style.width  = width  + "px";
+		shadows.style.height = height + "px";
+		shadows.style.display = "none";
+		document.getElementById("graphicsContainer").appendChild(shadows);
+		shadows = shadows.getContext("2d");
+		shadows.width  = width  * SHADOWS_RESERVE / SHADOWS_PIXELATION;
+		shadows.height = height * SHADOWS_RESERVE / SHADOWS_PIXELATION;
+		shadows.fillStyle = "#fff";
+		shadows.fillRect(0, 0, shadows.width, shadows.height);
+		shadows.lineCap = "round";
+		
+		var backgrounds = new (function() {
+			this.__proto__ = [];
+			this.add = function(width, height, depth) {
+				var c = document.createElement("canvas");
+				c.setAttribute("width",  width  + "px");
+				c.setAttribute("height", height + "px");
+				c.style.zIndex = -depth;
+				document.getElementById("backgroundsContainer").appendChild(c);
+				c = c.getContext("2d");
+				c.width = width;
+				c.height = height;
+				c.depth = depth;
+				this.push(c);
+			};
+			this.removeAll = function() {
+				// FIXME
+			};
+			this.updateParallax = function(camx, camy) {
+				for (var i = 0; i < this.length; i++) {
+					this[i].canvas.style.left = (((-camx / this[i].depth - (this[i].width  - width ) >> 1) | 0)) + "px";
+					this[i].canvas.style.top  = (((-camy / this[i].depth - (this[i].height - height) >> 1) | 0)) + "px";
+				};
+			};
+		})();
+		
+		
+		// Init physics
+		
+		create_phys_world();
+		var world = create_phys_world(-10000, -10000, 10000, 10000, 100);
+	
+		createBox(world, 0, 50, 100, 20 , true);
+		createBox(world, -50, 0, 10, 10 , false);
+		var ball = createBall(world, 0, 0);
+		
+		var stepping = false;
+		var timeStep = 1.0/60;
+		var iteration = 1;
+		
+		// End Init physics
+		
+		// Game variables
+		var shadowBlurRadius = 25;
+		var darknessSpeed    = 1;
+		var lightPower       = 75;
+		var ambientLight     = 20;
+		
+		
+		
+		// Run loading checker
+		var loadingInt = setInterval(function() {
+		
+			// Check if all images loaded and connection established
+			if (imagesLoader.completed() == false) return;
+			
+			// Remove "loading" label
+			clearInterval(loadingInt);
+			document.getElementById("loading").className = "loaded";
+			setTimeout(function() {
+				document.getElementById("loading").style.display = "none";
+			}, 1000);
+			
+			
+			
+			// === Launch game ===
+			
+			// Launch music
+			
+			//document.getElementById("mus").play()
+			
+			// Draw background
+			backgrounds.add(1000, 1000, 1);
+			backgrounds[0].fillStyle = "#066";
+			for (var i = 0, n = backgrounds[0].width; i < n; i += 10) {
+				for (var j = i % 20, m = backgrounds[0].height; j < m; j += 20) {
+					backgrounds[0].fillRect(i, j, 10, 10);
+				}
+			}
+			//blurContextRGBA(backgrounds[0], 0, 0, backgrounds[0].width, backgrounds[0].height, 1);
+			 
+			backgrounds.add(1000, 1000, 2);
+			backgrounds[1].fillRect(0, 0, backgrounds[1].width, backgrounds[1].height);
+			backgrounds[1].fillStyle = "#033";
+			for (var i = 0, n = backgrounds[0].width; i < n; i += 20) {
+				for (var j = i % 40, m = backgrounds[0].height; j < m; j += 40) {
+					backgrounds[1].fillRect(i, j, 20, 20);
+				}
+			}
+			backgrounds[1].drawImage(background, (backgrounds[0].width - background.width) / 2, (backgrounds[0].height - background.height) / 2);
+			
+			var gameInt = setInterval(function() {
+			
+				// Calc camera coords
+				//camera.position.x = controls.mouse.x - width  / 2;
+				//camera.position.y = controls.mouse.y - height / 2;
+				camera.position.x = controls.ball.x;
+				camera.position.y = controls.ball.y;
+			
+				// Parralaxing backgrounds
+				backgrounds.updateParallax(camera.position.x, camera.position.y);
+				
+				// Render scene
+				
+				ctx.clearRect(0, 0, width, height);
+				
+				//cap
+				ctx.save();
+					ctx.translate(-camera.position.x + width / 2, -camera.position.y + height / 2);
+					phys_update();
+				ctx.restore();
+				//store the position of a ball into conTROLLs
+				controls.ball.x = ball.GetCenterPosition().x;
+				controls.ball.y = ball.GetCenterPosition().y;
+
+
+				
+				ctx.save();
+					ctx.translate(-camera.position.x, -camera.position.y);
+					ctx.fillStyle = "#fff";
+					
+					// Apply shadows
+					/*var w = (shadows.width  / SHADOWS_RESERVE) | 0;
+					var h = (shadows.height / SHADOWS_RESERVE) | 0;
+					var shadowsData = shadows.getImageData(w / 2, h / 2, w, h).data;
+					var scene = ctx.getImageData(0, 0, width, height);
+					var sceneData = scene.data;
+					for (var i = 0, n = shadowsData.length; i < n; i += 4) {
+						shadowsData[i] = min(shadowsData[i], 255 - ambientLight);
+						var alpha = 1 - shadowsData[i] / 255.0;
+						for (var j = 0, m = SHADOWS_PIXELATION; j < m; j++) {
+							for (var k = 0; k < m; k++) {
+								base = j * width * 4 + k * 4 + ((i % (w * 4)) * SHADOWS_PIXELATION) + width * 4 * SHADOWS_PIXELATION * ((i / (w * 4)) | 0);
+								sceneData[base]     *= alpha;
+								sceneData[base + 1] *= alpha;
+								sceneData[base + 2] *= alpha;
+								sceneData[base + 3] = max(sceneData[base + 3], shadowsData[i]);
+							}
+						}
+					}*/
+				ctx.restore();
+				//ctx.putImageData(scene, 0, 0);
+				
+				
+				// Update shadows
+				shadows.save();
+					// Fade out old pic
+					shadows.globalCompositeOperation = "lighter";
+					shadows.globalAlpha = darknessSpeed / FPS;
+					shadows.fillStyle = "#fff";
+						shadows.fillRect(0, 0, shadows.width, shadows.height);
+					shadows.globalCompositeOperation = "source-over";
+					shadows.globalAlpha = 1;
+					// Move pic to fit the cam
+					var dx = camera.position.last_x - camera.position.x;
+					var dy = camera.position.last_y - camera.position.y;
+					var cameraMoved = !((dx == 0) && (dy == 0));
+					if (cameraMoved == true)  {
+						var shadowsTemp = shadows.getImageData(0, 0, shadows.width, shadows.height);
+						shadows.fillRect(0, 0, shadows.width, shadows.height);
+						shadows.putImageData(shadowsTemp, dx, dy);
+					}
+					//shadows.translate(camera.position.x, camera.position.y);
+					shadows.translate(shadows.width / 2, shadows.height / 2);
+					shadows.scale(1.0 / SHADOWS_PIXELATION, 1.0 / SHADOWS_PIXELATION);
+					// Draw liten part
+					shadows.fillStyle = "#000";
+					//if (cameraMoved == false) {
+						shadows.beginPath();
+							shadows.arc(0, 0, lightPower / 2, 0, 2 * Math.PI);
+							//shadows.arc(controls.ball.x - width / 2, controls.ball.y - height / 2, lightPower / 2, 0, 2 * Math.PI);
+							//shadows.arc(controls.ball.x, controls.ball.y, lightPower / 2, 0, 2 * Math.PI);
+						shadows.fill();
+					//} else {
+						shadows.beginPath();
+							shadows.moveTo(0, 0);
+							shadows.lineTo(dx, dy);
+							//shadows.moveTo(controls.ball.x      - width / 2, controls.ball.y      - height / 2);
+							//shadows.lineTo(controls.ball.last_x - width / 2, controls.ball.last_y - height / 2);
+							//shadows.moveTo(controls.ball.x, controls.ball.y);
+							//shadows.lineTo(controls.ball.last_x, controls.ball.last_y);
+							// FIXME: probably missing parts
+							camera.position.last_x = camera.position.x;
+							camera.position.last_y = camera.position.y;
+							controls.ball.last_x = controls.ball.x;
+							controls.ball.last_y = controls.ball.y;
+						shadows.lineWidth = lightPower;
+						shadows.stroke();
+					//}
+				shadows.restore();
+				// Blur it out
+				blurContextRGB(shadows, 0, 0, shadows.width, shadows.height, (shadowBlurRadius / SHADOWS_PIXELATION) | 0);
+				var vel = ball.GetLinearVelocity();
+				if ((controls.keyState & KEY_LEFT ) != 0) {					
+					vel.x += -15;
+					ball.SetLinearVelocity(vel);
+				}//camera.position.x -= 5;
+				if ((controls.keyState & KEY_RIGHT) != 0) {
+					vel.x += 15;
+					ball.SetLinearVelocity(vel);
+				}//camera.position.x += 5;
+				if ((controls.keyState & KEY_UP   ) != 0) {
+					vel.y += -15;
+					ball.SetLinearVelocity(vel);
+				}//camera.position.y -= 5; 
+				if ((controls.keyState & KEY_DOWN ) != 0) {
+					vel.y += 15;
+					ball.SetLinearVelocity(vel);
+				}//camera.position.y += 5;
+				if ((controls.keyState & KEY_ACTION1) != 0) {
+					//camera.position.x = 0;
+					//camera.position.y = 0;
+					vel.y = 0;
+					vel.x = 0;
+					ball.SetLinearVelocity(vel);
+					// ====== ball.SetAngularVelocity(vel); ======= dont work - fix
+					ball.SetCenterPosition(new b2Vec2(0,0),0);
+
+				}
+				
+			}, 1000 / FPS);
+			
+			
+			
+			// Hook up handlers
+			window.onkeydown = function(e) {
+			
+				switch(e.keyCode) {
+					
+					 // Up
+					case 87: case 38:
+						controls.keyState |= KEY_UP;
+						break;
+					
+					 // Down
+					case 83: case 40:
+						controls.keyState |= KEY_DOWN;
+						break;
+					
+					 // Right
+					case 68: case 39:
+						controls.keyState |= KEY_RIGHT;
+						break;
+					
+					// Left
+					case 65: case 37:
+						controls.keyState |= KEY_LEFT;
+						break;
+					
+					// Escape
+					case 27:
+						log.add("Escape");
+						break;
+					
+					// Space
+					case 32:
+						controls.keyState |= KEY_ACTION1;
+						break;
+					
+					// Enter
+					case 13:
+						log.add("Enter");
+						break;
+					
+					// Tilda
+					case 192:
+						log.switch();
+						break;
+						
+					default: log.add("Unused key down: " + e.keyCode);
+				}
+			};
+			
+			window.onkeyup = function(e) {
+				switch(e.keyCode) {
+					case 87: case 38:	// Up
+						controls.keyState &= ~KEY_UP;
+						break;
+					case 83: case 40:	// Down
+						controls.keyState &= ~KEY_DOWN;
+						break;
+					case 68: case 39:	// Right
+						controls.keyState &= ~KEY_RIGHT;
+						break;
+					case 65: case 37:	// Left
+						controls.keyState &= ~KEY_LEFT;
+						break;
+					case 32:			// Space
+						controls.keyState &= ~KEY_ACTION1;
+						break;
+				}
+			};
+			
+			ctx.canvas.parentNode.onmousemove = function(e) {
+				// FIXME: this won't works in firefox.
+				controls.mouse.x = e.offsetX;
+				controls.mouse.y = e.offsetY;
+			};
+			
+			
+		}, 250);
+		
+	</script>
+
+</body></html>

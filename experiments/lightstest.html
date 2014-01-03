@@ -1,0 +1,318 @@
+<!doctype html>
+<html>
+
+	<head>
+	
+		<style type = "text/css">
+		
+			html, body {
+				width: 100%;
+				height: 100%;
+				display: table;
+			}
+			
+			body {
+				display: table-cell;
+				vertical-align: middle;
+				text-align: center;
+			}
+			
+			canvas {
+				border: 1px solid black;
+			}
+		
+		</style>
+	
+	</head>
+
+	<body>
+	
+		<canvas id = "shadows" width = "320px" height = "240px"></canvas>
+		<canvas id = "asdf"    width = "320px" height = "240px"></canvas>
+		<canvas id = "lights"  width = "320px" height = "240px"></canvas>
+	
+	</body>
+	
+	<script src = "blur.js"></script>
+	
+	<script>
+	
+		var FPS = 60;
+	
+		function Body(x, y, angle, isCircle, data, color) {
+			if (color == undefined) {
+				color = "#000";
+			}
+			this.x = x;
+			this.y = y;
+			this.angle = angle;
+			this.isCircle = isCircle;
+			this.data = data;
+			this.color = color;
+			this.draw = function(ctx) {
+				ctx.save();
+					ctx.fillStyle = this.color;
+					ctx.translate(this.x, this.y);
+					ctx.rotate(this.angle);
+					ctx.beginPath();
+						if (this.isCircle) {
+							ctx.arc(0, 0, this.data.radius, 0, 2 * Math.PI);
+						} else {
+							var v = this.data.vertices;
+							ctx.moveTo(v[0].x, v[0].y);
+							for (var i = 1; i < v.length; i++) {
+								ctx.lineTo(v[i].x, v[i].y);
+							}
+							ctx.closePath();
+						}
+					ctx.fill();
+					ctx.stroke();
+				ctx.restore();
+			};
+			this.castShadows = function(ctx, x, y, scale) {
+				var invert = false;
+				if (scale == undefined) {
+					scale = 100;
+				}
+				if (this.isCircle) {
+					// http://www.kompoblog.ru/?p=23
+					var dx = this.x - x;
+					var dy = this.y - y;
+					var dd = dx * dx + dy * dy;
+					
+					if (dd <= this.data.radius * this.data.radius) {
+					
+						/*ctx.beginPath();
+							ctx.arc(x, y, dd * scale, 0, 2 * Math.PI);
+						ctx.fill();*/
+						//ctx.fillRect(0, 0, width, height);
+					
+					} else {
+					
+						var cx = x + dx / 2;
+						var cy = y + dy / 2;
+						var d = Math.sqrt(dd);
+						
+						var x1 = this.x;
+						var y1 = this.y;
+						var r1 = this.data.radius;
+						var x2 = cx;
+						var y2 = cy;
+						var r2 = d / 2;
+						var r2r2 = dd / 4;
+						
+						var DD = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1);
+						var D = Math.sqrt(DD);
+						var B = (r2r2 - r1 * r1 + DD) / (2 * D);
+						var A = D - B;
+						var H = Math.sqrt(r2r2 - B*B);
+						
+						var X = x1 + (x2-x1)/(D/A);
+						var Y = y1 + (y2-y1)/(D/A);
+						
+						var hx1 = X - (Y-y2)*H/B;
+						var hy1 = Y + (X-x2)*H/B;
+						var hx2 = X + (Y-y2)*H/B;
+						var hy2 = Y - (X-x2)*H/B;
+						
+						var fx1 = hx1 + (hx1 - x) * scale;
+						var fy1 = hy1 + (hy1 - y) * scale;
+						var fx2 = hx2 + (hx2 - x) * scale;
+						var fy2 = hy2 + (hy2 - y) * scale;
+						ctx.beginPath();
+							ctx.moveTo((x1 - x) * scale, (y1 - y) * scale);
+							ctx.lineTo(fx1, fy1);
+							ctx.arcTo(x, y, hx2, hy2, r1);
+							ctx.lineTo(fx2, fy2);
+							ctx.closePath();
+						ctx.fill();
+					
+					}
+					
+				} else {
+				
+					// http://www.codenet.ru/progr/cg/lec_1_2.php
+					
+					ctx.save();
+					
+						// FIXME: performance can be improved
+					
+						ctx.translate(this.x, this.y);
+						ctx.rotate(this.angle);
+				
+						var cosA = Math.cos(-this.angle);
+						var sinA = Math.sin(-this.angle);
+						var tx = (x - this.x) * cosA - (y - this.y) * sinA;
+						var ty = (x - this.x) * sinA + (y - this.y) * cosA;						
+						
+						var v = this.data.vertices;
+						
+						var x1 = v[v.length - 1].x;
+						var y1 = v[v.length - 1].y;
+						
+						var iStart = 0;
+						var iEnd = v.length - 1;
+						var flag = false;
+						var prevFlag = false;
+						var length = 0;
+						
+						for (var i = 0; i < v.length; i++) {
+							var x2 = v[i].x;
+							var y2 = v[i].y;
+							// http://coderlife.ru/progr/polozhenie-tochki-otnositelno-pryamoj.html
+							var r = (x2 - x1) * (ty - y1) - (y2 - y1) * (tx - x1);
+							var flag = ((r > 0) ^ invert);
+							if (flag) { 
+								length++;
+							}
+							if (flag != prevFlag) {
+								if (flag) {
+									iStart = ((i - 1) + v.length) % v.length;
+								} else {
+									iEnd = min(iEnd, i - 1);
+								}
+							}
+							prevFlag = flag;
+							x1 = x2;
+							y1 = y2;
+						}
+						if (flag) {
+							iEnd = min(iEnd, v.length - 1);
+						}
+						
+						if (length > 0) {
+						
+							var fx1 = v[iStart].x + (v[iStart].x - tx) * scale;
+							var fy1 = v[iStart].y + (v[iStart].y - ty) * scale;
+							var fx2 = v[iEnd].x + (v[iEnd].x - tx) * scale;
+							var fy2 = v[iEnd].y + (v[iEnd].y - ty) * scale;
+							
+							ctx.beginPath();
+							
+								ctx.moveTo(-tx * scale, -ty * scale);
+							
+								ctx.lineTo(fx1, fy1);
+							
+								for (var i = 0, j = iStart; i <= length; i++, j = (j + 1) % v.length) {
+									ctx.lineTo(v[j].x, v[j].y);
+								}
+								
+								ctx.lineTo(fx2, fy2);
+								ctx.closePath();
+								
+							ctx.fill();
+						
+						}
+					
+					ctx.restore();
+				
+				}
+			};
+		}
+		
+		var ctx = document.getElementById("shadows").getContext("2d");
+		var asdf = document.getElementById("asdf").getContext("2d");
+		
+		var lights = {
+			ctx: document.getElementById("lights").getContext("2d")
+		};
+		var width  = ctx.width  = ctx.canvas.width;
+		var height = ctx.height = ctx.canvas.height;
+		asdf.fillStyle = "#fff";
+		asdf.fillRect(0, 0, width, height);
+		
+		var bodies = [];
+		for (var i = 0; i < 10; i++) {
+			var x = -width  / 2 + width  * Math.random();
+			var y = -height / 2 + height * Math.random();
+			var angle = Math.PI * Math.random();
+			if (Math.random() > 0.5) {
+				bodies.push(new Body(x, y, angle, true, {radius: 10 + 15 * Math.random()}, "rgb(" + ((255 * Math.random()) | 0) + ", " + ((255 * Math.random()) | 0) + ", " + ((255 * Math.random()) | 0) + ")"));
+			} else {
+				var w = 10 + 40 * Math.random();
+				var h = 10 + 40 * Math.random();
+				bodies.push(new Body(
+					x,  y,
+					angle, false, {
+						vertices: [
+							{x: -w / 2, y:  h / 2},
+							{x:  w / 2, y:  h / 2},
+							{x:  w / 2, y: -h / 2},
+							{x: -w / 2, y: -h / 2}
+						]
+					},
+					"rgb(" + ((255 * Math.random()) | 0) + ", " + ((255 * Math.random()) | 0) + ", " + ((255 * Math.random()) | 0) + ")"
+				));
+			}
+		}
+		
+		function min(a, b) { return a < b ? a : b; }
+		function max(a, b) { return a > b ? a : b; }
+		
+		var AMBIENT_LIGHT = 0.1;
+		var FADING_SPEED  = 5;
+		
+		setInterval(function() {
+			ctx.fillStyle = "#fff";
+			ctx.fillRect(0, 0, width, height);
+			lights.ctx.fillStyle = "#fff";
+			lights.ctx.fillRect(0, 0, width, height);
+			lights.ctx.fillStyle = "#000";
+			ctx.save();
+			lights.ctx.save();
+				ctx.translate(width / 2, height / 2);
+				lights.ctx.translate(width / 2, height / 2);
+				for (var i = 0; i < bodies.length; i++) {
+					bodies[i].draw(ctx);
+					bodies[i].castShadows(lights.ctx, mouse.x, mouse.y, 100);
+				}
+			ctx.restore();
+			lights.ctx.restore();
+			//blurContextRGB(lights.ctx, 0, 0, width, height, 10);
+			blurContextRGB(asdf, 0, 0, width, height, 10);
+			var a = lights.ctx.getImageData(0, 0, width, height).data;
+			var b = asdf.getImageData(0, 0, width, height);
+			var c = b.data;
+			var d = ctx.getImageData(0, 0, width, height);
+			var e = d.data;
+			for (var i = 0, n = a.length; i < n; i += 4) {
+				c[i] = max(255 * AMBIENT_LIGHT, max(c[i] - 255 * FADING_SPEED / FPS, a[i]));
+				e[i]     *= c[i] / 255.0;
+				e[i + 1] *= c[i] / 255.0;
+				e[i + 2] *= c[i] / 255.0;
+			}
+			
+			asdf.putImageData(b, 0, 0);
+			
+			
+			ctx.putImageData(d, 0, 0);
+			
+			/*c = asdf.getImageData(0, 0, width, height).data;
+			var d = ctx.getImageData(0, 0, width, height);
+			var e = d.data;
+			for (var i = 0, n = a.length; i < n; i += 4) {
+				
+				e[i]     *= c[i] / 255.0;
+				e[i + 1] *= c[i] / 255.0;
+				e[i + 2] *= c[i] / 255.0;
+				
+			}
+			ctx.putImageData(d, 0, 0);*/
+			
+			ctx.save();
+				ctx.translate(width / 2, height / 2);
+				for (var i = 0; i < bodies.length; i++) {
+					bodies[i].draw(ctx);
+				}
+			ctx.restore();
+		}, 1000 / FPS);
+		
+		var mouse = {x: 0, y: 0};
+		lights.ctx.canvas.onmousemove = ctx.canvas.onmousemove = function(e) {
+			mouse.x = e.offsetX - width  / 2;
+			mouse.y = e.offsetY - height / 2;
+		};
+	
+	</script>
+
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+
+<html>
+	
+	<head>
+		
+		<title>Template</title>
+		
+		<style>
+			
+			html, body {
+				width:  100%;
+				height: 100%;
+				display: table;
+			}
+			
+			body {
+				display: table-cell;
+				text-align: center;
+				vertical-align: middle;
+			}
+			
+			canvas {
+				border: 1px solid black;
+			}
+			
+		</style>
+		
+	</head>
+	
+	
+	
+	<body>
+	
+		
+	
+	</body>
+	
+	
+	
+	<script>
+		
+		var ctx = document.createElement("canvas").getContext("2d");
+		var width  = ctx.width  = ctx.canvas.width  = 640;
+		var height = ctx.height = ctx.canvas.height = 480;
+		document.body.appendChild(ctx.canvas);
+		
+		ctx.translate(width / 2, height / 2);
+		
+		
+		
+	</script>
+	
+</html>

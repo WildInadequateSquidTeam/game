@@ -1,0 +1,691 @@
+<!doctype html>
+
+<html>
+
+	<head>
+	
+		<title>Shadows demo</title>
+		
+		<style type = "text/css">
+			
+			html, body {
+				width: 100%;
+				height: 100%;
+				display: table;
+				font-family: sans-serif;
+			}
+			
+			body {
+				text-align: center;
+				display: table-cell;
+				vertical-align: middle;
+			}
+			
+			canvas {
+				border: 1px solid black;
+				border-radius: 7.5px;
+			}
+			
+			input[type="number"] {
+				width: 50px;
+			}
+
+			
+		</style>
+		
+	</head>
+	
+	<body>
+	
+		<h1>Shadows demo</h1>
+		<div align = "center">
+		<table>
+			<tr>
+				<td>
+					<canvas width = "640" height = "360" style = "width: 960px; height: 540px"></canvas>
+				</td>
+				<td style = "vertical-align: top">
+					<table style = "padding: 0px 10px">
+						<tr>
+							<td>Light radius:</td>
+							<td><input type = "number" onchange = "LIGHT_RADIUS = this.value * 1; ctx.stencil.buffer.updateGradients();" value = "200"/> px</td>
+						</tr>
+						<tr>
+							<td colspan = 2 id = "lightparam">
+								Light shade:<br>
+							</td>
+						</tr>
+						<tr>
+							<td>Fading speed:</td>
+							<td><input type = "number" onchange = "FADING_SPEED = this.value * 1;" value = "1"/> s</td>
+						</tr>
+						<tr>
+							<td>Ambient light:</td>
+							<td><input type = "number" onchange = "AMBIENT_LIGHT = this.value * 1;" value = "10"/> %</td>
+						</tr>
+						<tr>
+							<td>Light blur radius:</td>
+							<td><input type = "number" onchange = "BLUR_RADIUS = this.value * 1;" value = "10"/> px</td>
+						</tr>
+						<tr>
+							<td>Secondary blur offset:</td>
+							<td><input type = "number" onchange = "BLUR_START = this.value * 1;" value = "20"/> %</td>
+						</tr>
+						<tr>
+							<td>Secondary blur power:</td>
+							<td><input type = "number" onchange = "BLUR_2 = this.value * 1;" value = "4"/></td>
+						</tr>
+						<tr>
+							<td>Shade of blue offset:</td>
+							<td><input type = "number" onchange = "BLUE_START = this.value * 1;" value = "25"/> %</td>
+						</tr>
+						<tr>
+							<td>Shade of blue power:</td>
+							<td><input type = "number" onchange = "BLUE_2 = this.value * 1;" value = "5"/></td>
+						</tr>
+						<tr>
+							<td colspan = 2>
+								<input type = "checkbox" id = "shadowInstantBlur" onchange = "BLUR_SHADOWS_INSTANTLY = this.checked;"/>Blur shadows instantly
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+		</div>
+		(c) 2012, AlexXsWx
+		
+	</body>
+	
+	<script src = "blur.js"></script>
+	<script src = "body.js"></script>
+	<script src = "stencil.js"></script>
+	<script src = "graphicalInput.js"></script>
+	
+	<script>
+	
+		var FPS = 60;
+		
+		
+		
+		var LIGHT_RADIUS = 200;
+		var FADING_SPEED  = 1;
+		var AMBIENT_LIGHT = 10;
+		var BLUR_RADIUS = 10;
+		
+		var BLUR_START = 20;
+		var BLUR_2     = 4;
+		
+		var BLUE_START = 25;
+		var BLUE_2     = 5;
+		
+		var BLUR_SHADOWS_INSTANTLY = false;
+	
+	
+		// Main context
+		var ctx = document.getElementsByTagName("canvas")[0].getContext("2d");
+		var width  = ctx.width  = ctx.canvas.width;
+		var height = ctx.height = ctx.canvas.height;		
+		
+		// Stencil context, for composited shadows
+		ctx.stencil = document.createElement("canvas").getContext("2d");
+		ctx.stencil.canvas.width  = width;
+		ctx.stencil.canvas.height = height;
+		
+		// Buffer for single shadows
+		ctx.stencil.buffer = document.createElement("canvas").getContext("2d");
+		ctx.stencil.buffer.canvas.width  = width;
+		ctx.stencil.buffer.canvas.height = height;
+		
+		ctx.stencil.buffer.g1 = null;
+		ctx.stencil.buffer.g2 = null;
+		
+		var lightParamInput = new GraphicalInput(200, 200);
+		document.getElementById("lightparam").appendChild(lightParamInput);
+		lightParamInput.onchange = (
+			ctx.stencil.buffer.updateGradients = function(data) {
+				if (data == undefined) {
+					data = ctx.stencil.buffer.data;
+				} else {
+					ctx.stencil.buffer.data = data;
+				}
+				with (ctx.stencil.buffer) {
+					g1 = createRadialGradient(
+						0, 0, 0,
+						0, 0, LIGHT_RADIUS
+					);
+					g2 = createLinearGradient(
+						0,  LIGHT_RADIUS,
+						0, -LIGHT_RADIUS
+					);
+					for (var i = 0; i < data.length; i++) {
+						var color = "rgb(" + (((1 - data[i].y) * 255) | 0) + ",0,0)";
+						g1.addColorStop(data[i].x, color);
+					}
+					for (var i = data.length - 1; i >= 0; i--) {
+						var color = "rgb(" + (((1 - data[i].y) * 255) | 0) + ",0,0)";
+						g2.addColorStop(0.5 - data[i].x / 2, color);
+					}
+					for (var i = 1; i < data.length; i++) {
+						var color = "rgb(" + (((1 - data[i].y) * 255) | 0) + ",0,0)";
+						g2.addColorStop(0.5 + data[i].x / 2, color);
+					}
+				}
+			}
+		);
+		lightParamInput.setData([
+			{x:    0, y: 0.43},
+			{x: 0.17, y: 0.45},
+			{x: 0.34, y: 0.51},
+			{x: 0.47, y: 0.62},
+			{x: 0.57, y: 0.71},
+			{x: 0.69, y: 0.82},
+			{x: 0.83, y: 0.91},
+			{x:    1, y:    1}
+		]);
+		ctx.stencil.buffer.updateGradients(lightParamInput.getData());
+		
+		/*ctx.stencil.canvas.style.width  = "320px";
+		ctx.stencil.canvas.style.height = "160px";
+		document.body.appendChild(ctx.stencil.canvas);*/
+				
+		// Accumulator context, for "motion blur"
+		ctx.acc = document.createElement("canvas").getContext("2d");
+		ctx.acc.canvas.width  = width;
+		ctx.acc.canvas.height = height;
+		ctx.acc.fillRect(0, 0, width, height);
+		
+		
+		var bodies = [];
+		bodies.newBody = null;
+		bodies.push(new Body(
+			257, 310, 0, false, {vertices: [
+				{x: -25, y:  15},
+				{x: -5,  y: -25},
+				{x:  5,  y: -25},
+				{x:  5,  y:  15},
+			]}
+		));
+		bodies.push(new Body(
+			213, 99, 0, false, {vertices: [
+				{x: -95, y: -25},
+				{x: -95, y:  35},
+				{x:  30, y:  35},
+				{x:  30, y: -25},
+			]}
+		));
+		
+		
+		var lights = [
+			{ x: 0, y: 0, lastX: 0, lastY: 0, active: true},
+			{ x: 0, y: 0, lastX: 0, lastY: 0, active: false}
+		];
+		
+		
+		var mouse = {
+			x: 0,
+			y: 0,
+			lastX: 0,
+			lastY: 0
+		};
+		
+		
+		var background = new Image();
+		background.src = "background.png";
+		var bluredBackgroundData = [];
+		
+		var scene = ctx.createImageData(width, height);
+		
+		
+		background.onload = function() {
+		
+			// Calculate blur for different radiuses. Uneffective, but easy. Shut up.
+			ctx.drawImage(background, 0, 0);
+			bluredBackgroundData.push(ctx.getImageData(0, 0, width, height));
+			for (var i = 1; i < 256; i++) {
+				ctx.drawImage(background, 0, 0);
+				blurContext(ctx, 0, 0, width, height, i);
+				bluredBackgroundData.push(ctx.getImageData(0, 0, width, height));
+			}
+			
+			
+			// Main loop
+			setInterval(function() {
+			
+				// Draw background
+				ctx.drawImage(background, 0, 0);
+				
+				// Apply and draw shadows
+				/*{
+					var lightData = ctx.acc.getImageData(0, 0, width, height).data;
+					//var scene     = ctx.createImageData(0, 0, width, height);
+					var d = scene.data;
+					var luminosity, alpha, b;
+					for (var i = 0, n = d.length; i < n; i += 4) {
+						luminosity = Math.max(lightData[i], AMBIENT_LIGHT * 2.55);
+						alpha = luminosity / 255;
+						var alpha2 = alpha * alpha;
+						b = bluredBackgroundData[
+							(Math.max(0, BLUR_START * 2.55 - luminosity) / BLUR_2) | 0
+						].data;
+						var blueLost = (Math.max(0, BLUE_START * 2.55 - luminosity) / BLUE_2) | 0;
+						d[i + 0] = b[i + 0] * alpha - blueLost;
+						d[i + 1] = b[i + 1] * alpha - blueLost; 
+						d[i + 2] = b[i + 2] * alpha;
+						d[i + 3] = 255;
+						/*scene.data[i + 0] = luminosity;
+						scene.data[i + 1] = luminosity;
+						scene.data[i + 2] = luminosity;
+						scene.data[i + 3] = 255;* /
+					}
+					ctx.putImageData(scene, 0, 0);
+				}*/
+				ctx.putImage(dithering(ctx.acc.getImageData(0, 0, width, height), 1), 0, 0);
+				
+				
+				
+				// Debug. Draw bodies
+				ctx.strokeStyle = "#0f0";
+				ctx.fillStyle = "rgba(0,0,0,0)";
+				
+				// Draw new body
+				if (bodies.newBody) {
+					ctx.beginPath();
+						for (var i = 0; i < bodies.newBody.length; i++) {
+							ctx.lineTo(bodies.newBody[i].x, bodies.newBody[i].y);
+						}
+						ctx.lineTo(mouse.x, mouse.y);
+					ctx.stroke();
+				}
+				
+				// Draw body, if mouse over it
+				for (var i = 0; i < bodies.length; i++) {
+					if (bodies[i].hitAt(mouse.x, mouse.y)) {
+						bodies[i].draw(ctx);
+					}
+				}
+				
+				
+				// Fade accumulator
+				//ctx.acc.fillStyle = "rgba(0, 0, 0, " + FADING_SPEED / FPS + ")";
+				//ctx.acc.fillRect(0, 0, width, height);
+				
+				
+				
+				lights[0].x = mouse.x;
+				lights[0].y = mouse.y;
+				mouse.lastX = mouse.x;
+				mouse.lastY = mouse.y;
+				/*var d = (new Date()) / 1000;
+				lights[1].x = width  / 2 + 200 * Math.cos(d);
+				lights[1].y = height / 2 + 200 * Math.sin(d);*/
+				
+				ctx.stencil.globalCompositeOperation = "source-over";
+				ctx.stencil.fillRect(0, 0, width, height);
+				
+				for (var i = 0, mix; i < lights.length; i++) {
+				
+					if (lights[i].active) {
+				
+						with (ctx.stencil) {
+					
+							//buffer.clearRect(0, 0, width, height);
+							buffer.fillStyle = "#000";
+							buffer.fillRect(0, 0, width, height);
+							
+							// Draw light
+							
+							buffer.save();
+								
+								drawMovingLight(
+									buffer,
+									lights[i].lastX, lights[i].lastY,
+									lights[i].x, lights[i].y,
+									LIGHT_RADIUS,
+									buffer.g1, buffer.g2
+								);
+								
+								lights[i].lastX = lights[i].x;
+								lights[i].lastY = lights[i].y;
+								
+							buffer.restore();
+							
+							// Cut shadows
+							
+							buffer.save();
+							
+								//buffer.globalCompositeOperation = "destination-out";
+								
+								for (var j = 0; j < bodies.length; j++) {
+									castShadows(buffer, bodies[j], lights[i].x, lights[i].y);
+								}
+							
+							buffer.restore();
+							
+						}
+						
+						// Compose
+						ctx.stencil.globalCompositeOperation = "lighter";
+						ctx.stencil.drawImage(ctx.stencil.buffer.canvas, 0, 0);
+						
+					}
+					
+				}
+				if (!BLUR_SHADOWS_INSTANTLY) {
+					blurContextR(ctx.acc, 0, 0, width, height, BLUR_RADIUS);
+				}
+				// Accumulate shadows
+				if (FADING_SPEED == 0) {
+					ctx.acc.drawImage(ctx.stencil.canvas, 0, 0);
+				} else {
+					var a = ctx.acc.getImageData(0, 0, width, height);
+					var b = ctx.stencil.getImageData(0, 0, width, height);
+					var fade = 255 * 1 / (FPS * FADING_SPEED);
+					for (var i = 0, n = a.data.length; i < n; i += 4) {
+						a.data[i] = Math.max(
+							a.data[i] - fade,
+							b.data[i]
+						);
+					}
+					ctx.acc.putImageData(a, 0, 0);
+				}
+				if (BLUR_SHADOWS_INSTANTLY) {
+					blurContextR(ctx.acc, 0, 0, width, height, BLUR_RADIUS);
+				}
+				
+			}, 1000 / FPS);
+			
+			
+			// Track mouse position
+			ctx.canvas.onmousemove = function(e) {
+				// Firefox bug fix
+				if (e.offsetX == undefined) {
+					e.offsetX = e.layerX;
+					e.offsetY = e.layerY;
+				}
+				// ===============
+
+				mouse.x = e.offsetX * width  / ctx.canvas.clientWidth;
+				mouse.y = e.offsetY * height / ctx.canvas.clientHeight;
+			};
+			
+			
+			// Creating and destroying bodies by mouse
+			ctx.canvas.oncontextmenu = function(e) { return false; };
+			ctx.canvas.onmousedown = function(e) {
+			
+				var x = e.offsetX * width  / ctx.canvas.clientWidth;
+				var y = e.offsetY * height / ctx.canvas.clientHeight;
+				
+				if (e.which == 1) {
+					if (bodies.newBody) {
+						var dx = x - bodies.newBody[0].x;
+						var dy = y - bodies.newBody[0].y;
+						if (dx * dx + dy * dy < 100) {
+							for (var i = 0; i < bodies.newBody.length; i++) {
+								bodies.newBody[i].x = bodies.newBody[i].x - bodies.newBody.cx;
+								bodies.newBody[i].y = bodies.newBody[i].y - bodies.newBody.cy;
+							}
+							bodies.push(new Body(
+								bodies.newBody.cx, bodies.newBody.cy, 0,
+								false, {
+									vertices: bodies.newBody
+								}
+							));
+							bodies.newBody = null;
+						} else {
+							bodies.newBody.push({x: x, y: y});
+							bodies.newBody.cx += x;
+							bodies.newBody.cx /= 2;
+							bodies.newBody.cy += y;
+							bodies.newBody.cy /= 2;
+						}
+					} else {
+						bodies.newBody = [{x: x, y: y}];
+						bodies.newBody.cx = x;
+						bodies.newBody.cy = y;
+					}
+					
+				} else
+				if (e.which == 2) {
+					lights[1].active = !lights[1].active;
+					if (lights[1].active) {
+						lights[1].lastX = x;
+						lights[1].lasty = y;
+					}
+					lights[1].x = x;
+					lights[1].y = y;
+				} else
+				if (e.which == 3) {
+					if (bodies.newBody) {
+						bodies.newBody = null;
+					} else {
+						for (var i = 0; i < bodies.length; i++) {
+							if (bodies[i].hitAt(x, y)) {
+								bodies.splice(i, 1);
+							}
+						}
+					}
+				}
+			};
+			
+		};
+		
+		
+		
+		function drawMovingLight(ctx, x1, y1, x2, y2, r, g1, g2, fade) {
+		
+			var dx = x2 - x1;
+			var dy = y2 - y1;
+			
+			if ((dx == 0) && (dy == 0)) {
+			
+				ctx.save();
+				
+					ctx.translate(x2, y2);
+					ctx.fillStyle = g1;
+					ctx.fillRect(-r, -r, 2 * r, 2 * r);
+					ctx.fill();
+					
+				ctx.restore();
+				
+			} else {
+			
+				var distance = Math.sqrt(dx * dx + dy * dy);
+				var alpha = Math.atan2(dy, dx);
+				
+				ctx.save();
+				
+					ctx.translate(x1, y1);
+					ctx.rotate(alpha);
+					ctx.lineWidth = r * 2;
+					
+					ctx.strokeStyle = g1;
+					
+					ctx.beginPath();
+						ctx.moveTo(-r, 0);
+						ctx.lineTo( 1, 0);
+					ctx.stroke();
+					
+					ctx.translate(distance, 0);
+					
+					ctx.beginPath();
+						ctx.moveTo(-1, 0);
+						ctx.lineTo( r, 0);
+					ctx.stroke();
+					
+					ctx.strokeStyle = g2;
+					
+					ctx.beginPath();
+						ctx.moveTo(        0, 0);
+						ctx.lineTo( -distance, 0);
+					ctx.stroke();
+					
+					if (fade) {
+						var g3 = ctx.createRadialGradient(0, 0, r, 0, 0, distance + r);
+						g3.addColorStop(0, "rgba(0, 0, 0, 0)");
+						g3.addColorStop(1, "rgba(0, 0, 0, 1)");
+						ctx.strokeStyle = g3;
+						ctx.beginPath();
+							ctx.moveTo(  0, 0);
+							ctx.lineTo( -(distance + r), 0);
+						ctx.stroke();
+					}
+					
+				ctx.restore();
+				
+			}
+		}
+
+
+
+
+
+      	function dithering(imageData, zoom) {
+
+      		var data = imageData.data;
+      		var a = dither.length - 1;
+      		var b = a / 255.0;
+
+      		for (var i = 0, j = 0; i < data.length; i += 4, j++) {
+
+	      		data[i    ] = data[i + 1] = data[i + 2] = 0;      		
+	      		data[i + 3] = 255 * dither[
+	      			a - Math.round(b * data[i]) // lightLevel
+      			][
+      				((j / imageData.width / zoom) % 4) | 0 // y
+      			][
+      				((j % imageData.width / zoom) % 4) | 0 // x
+  				];
+	      		
+	      	};
+
+	      	imageData.data = data;
+	      	return imageData;
+
+      	}
+
+      	var dither = [
+			[
+				[0, 0, 0, 0],
+				[0, 0, 0, 0],
+				[0, 0, 0, 0],
+				[0, 0, 0, 0]
+			],
+
+			[
+				[1, 0, 0, 0],
+				[0, 0, 0, 0],
+				[0, 0, 0, 0],
+				[0, 0, 0, 0]
+			],
+
+			[
+				[1, 0, 0, 0],
+				[0, 0, 0, 0],
+				[0, 0, 1, 0],
+				[0, 0, 0, 0]
+			],
+
+			[
+				[1, 0, 1, 0],
+				[0, 0, 0, 0],
+				[0, 0, 1, 0],
+				[0, 0, 0, 0]
+			],
+
+			[
+				[1, 0, 1, 0],
+				[0, 0, 0, 0],
+				[1, 0, 1, 0],
+				[0, 0, 0, 0]
+			],
+
+			[
+				[1, 0, 1, 0],
+				[0, 1, 0, 0],
+				[1, 0, 1, 0],
+				[0, 0, 0, 0]
+			],
+
+			[
+				[1, 0, 1, 0],
+				[0, 1, 0, 0],
+				[1, 0, 1, 0],
+				[0, 0, 0, 1]
+			],
+
+			[
+				[1, 0, 1, 0],
+				[0, 1, 0, 1],
+				[1, 0, 1, 0],
+				[0, 0, 0, 1]
+			],
+
+			[
+				[1, 0, 1, 0],
+				[0, 1, 0, 1],
+				[1, 0, 1, 0],
+				[0, 1, 0, 1]
+			],
+///////////////////////////
+			[
+				[1, 1, 1, 0],
+				[0, 1, 0, 1],
+				[1, 0, 1, 0],
+				[0, 1, 0, 1] 
+			],
+
+			[
+				[1, 1, 1, 0],
+				[0, 1, 0, 1],
+				[1, 0, 1, 1],
+				[0, 1, 0, 1] 
+			],
+
+			[
+				[1, 1, 1, 1],
+				[0, 1, 0, 1],
+				[1, 0, 1, 1],
+				[0, 1, 0, 1] 
+			],
+
+			[
+				[1, 1, 1, 1],
+				[0, 1, 0, 1],
+				[1, 1, 1, 1],
+				[0, 1, 0, 1] 
+			],
+
+			[
+				[1, 1, 1, 1],
+				[1, 1, 0, 1],
+				[1, 1, 1, 1],
+				[0, 1, 0, 1] 
+			],
+
+			[
+				[1, 1, 1, 1],
+				[1, 1, 0, 1],
+				[1, 1, 1, 1],
+				[0, 1, 1, 1] 
+			],
+
+			[
+				[1, 1, 1, 1],
+				[1, 1, 1, 1],
+				[1, 1, 1, 1],
+				[0, 1, 1, 1] 
+			],
+
+			[
+				[1, 1, 1, 1],
+				[1, 1, 1, 1],
+				[1, 1, 1, 1],
+				[1, 1, 1, 1]
+			]
+		];
+		
+	</script>
+	
+</html>

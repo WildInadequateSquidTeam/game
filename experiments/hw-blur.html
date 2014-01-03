@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+
+<html>
+	
+	<head>
+		
+		<title>Template</title>
+		
+		<style>
+			
+			html, body {
+				width:  100%;
+				height: 100%;
+				display: table;
+			}
+			
+			body {
+				display: table-cell;
+				text-align: center;
+				vertical-align: middle;
+			}
+			
+			body > div {
+				display: inline-block;
+				width: 640px;
+				height: 480px;
+				position: relative;
+				overflow: hidden;
+				border: 1px solid black;
+			}
+			
+			body > div > * {
+				position: absolute;
+			}
+			
+			canvas {
+				
+			}
+			
+			div#shadow {
+				-webkit-filter: blur(5px);
+				background: -webkit-canvas(main);
+				display: inline-block;
+				width: 640px;
+				height: 480px;
+			}
+			
+		</style>
+		
+	</head>
+	
+	
+	
+	<body>
+	
+		<div>
+			<canvas></canvas>
+			<div id = "shadow"></div>
+		</div>
+	
+	</body>
+	
+	
+	
+	<script>
+	
+		var FPS = 60;
+		
+		var x, y, lx = 5000, ly = 5000;
+		
+		var c = document.getElementsByTagName("canvas");
+		
+		var ctx = c[0].getContext("2d");
+		var width  = ctx.width  = ctx.canvas.width  = 640;
+		var height = ctx.height = ctx.canvas.height = 480;
+		
+		var ctx2 = document.getCSSCanvasContext("2d", "main", width, height)
+		/*ctx2.width  = ctx2.canvas.width  = 640;
+		ctx2.height = ctx2.canvas.height = 480;*/
+		
+		
+		var image = new Image();
+		image.src = "background.jpg";
+		image.onload = function() {
+			ctx.drawImage(image, (width - image.width) / 2, (height - image.height) / 2);
+		}
+		
+		/*ctx.canvas.parentNode.onmousemove = function(e) {
+			x = e.offsetX;
+			y = e.offsetY;
+		};
+		
+		ctx.canvas.parentNode.onclick = function(e) {
+			lx = e.offsetX;
+			ly = e.offsetY;
+		};*/
+		
+		var grad1 = ctx.createRadialGradient(0, 0, 0, 0, 0, 250);
+		grad1.addColorStop(0.0, "rgba(0, 0, 0, 1)");
+		grad1.addColorStop(0.5, "rgba(0, 0, 0, 1)");
+		grad1.addColorStop(1.0, "rgba(0, 0, 0, 0)");
+		
+		setInterval(function() {
+			ctx.clearRect(0, 0, width, height);			
+			ctx.drawImage(image, (width - image.width) / 2, (height - image.height) / 2);
+			
+			ctx2.clearRect(0, 0, width, height);
+			ctx2.drawImage(ctx.canvas, 0, 0);
+			
+			with (ctx2) {
+				save();
+					globalCompositeOperation = "destination-out";
+					translate(lx, ly);
+					rotate(Math.atan2(y - ly, x - lx));
+					fillStyle = grad1;
+					beginPath();
+						arc(0, 0, 250, 0, 2 * Math.PI, false);
+					fill();
+					/*fillStyle = "#000";
+					beginPath();
+						moveTo(0, 0);
+						arc(0, 0, 150, -Math.PI / 16, Math.PI / 16, false);
+					fill();*/
+				restore();
+			}
+			
+			/*ctx2.clearRect(0, 0, width, height);		
+			ctx2.fillRect(x - 25, y - 25, 50, 50);*/
+			
+		}, 1000 / FPS);
+		
+	</script>
+	
+</html>

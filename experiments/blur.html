@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+
+<html>
+
+	<body>
+	</body>
+	
+	<script>
+	
+		var ctx = document.body.appendChild(document.createElement("canvas")).getContext("2d");
+		var width  = ctx.width  = ctx.canvas.width  = 20;
+		var height = ctx.height = ctx.canvas.height = 10;
+		
+		function precalc(sigma) {
+			
+			var sigma_inv_4 = sigma * sigma;
+			sigma_inv_4 = 1.0 / (sigma_inv_4 * sigma_inv_4);
+			
+			var coef_A = sigma_inv_4 * (sigma * (sigma * (sigma * 1.1442707 + 0.0130625) - 0.7500910) + 0.2546730);
+			var coef_W = sigma_inv_4 * (sigma * (sigma * (sigma * 1.3642870 + 0.0088755) - 0.3255340) + 0.3016210);
+			var coef_B = sigma_inv_4 * (sigma * (sigma * (sigma * 1.2397166 - 0.0001644) - 0.6363580) - 0.0536068);
+			
+			
+			var z0_abs   = Math.exp(coef_A);
+
+			var z0_real  = z0_abs * Math.cos(coef_W);
+			var z0_im    = z0_abs * Math.sin(coef_W);
+			var z2       = Math.exp(coef_B);
+
+			var z0_abs_2 = z0_abs * z0_abs;
+			
+			var a = [];
+			
+			a[2] = 1.0 / (z2 * z0_abs_2);
+			a[1] = -(2 * z0_real + z2) * a[2];
+			a[0] =  (2 * z0_real * z2 + z0_abs_2) * a[2];
+
+			var b0 = 1.0 - a[0] - a[1] - a[2];
+			
+			console.log(a);
+			console.log(b0);
+
+			return {
+				a:  a,
+				b0: b0
+			}
+			
+		}
+		
+		function blur(ctx, sx, sy, sw, sh, radius) {
+		
+			var a = ctx.getImageData(sx, sy, sw, sh);
+			var b = a.data;
+			
+			var c = ctx.createImageData(sw, sh);
+			var d = c.data;
+			
+			var e = precalc(radius);
+			
+			// y(n) = b0 * x(n) - sum(a_k * y(n - k)) from k=1 to 3
+			for (var i = 0, offset = 0; i < sh; i++) {
+				var acc = [];
+				var h = [];
+				for (var j = 0; j < sw; j++, offset += 4) {
+					for (var l = 0; l < 1; l++) {
+						var o = offset + l;
+						var sum = 0;
+						for (var k = 0, m = acc.length - 1; (k < 3) && (m >= 0); k++, m--) {
+							sum += e.a[k] * acc[m][l];
+							console.log(j + ": sum += " + e.a[k] + " * " + acc[m][l] + " = " + sum);
+						}
+						h[l] = e.b0 * b[o] - sum;
+						console.log(j + ": h[l] = " + e.b0 + " * " + b[o] + " - " + sum + " = " + h[l]);
+						d[o] = h[l];
+					}
+					if (j > 2) acc.shift();
+					acc.push([
+						h[0], h[1], h[2]
+					]);
+					d[offset + 3] = 255;
+				}
+			}
+			ctx.putImageData(c, 0, 0);
+		}
+		
+		ctx.fillStyle = "#000";
+		ctx.fillRect(0, 0, width, height);
+		ctx.fillStyle = "#fff";
+		ctx.beginPath();
+			ctx.arc(width / 2, height / 2, width / 4, 0, 2 * Math.PI);
+		ctx.fill();
+		
+		blur(ctx, 0, 0, width, height, 1);
+	
+	</script>
+
+</html>

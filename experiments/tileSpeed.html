@@ -1,0 +1,205 @@
+<!DOCTYPE HTML>
+
+<html>
+	
+	<head>
+		
+		<title>Tile speed test</title>
+		
+		<style>
+			
+			html, body {
+				width:  100%;
+				height: 100%;
+				display: table;
+			}
+			
+			body {
+				display: table-cell;
+				text-align: center;
+				vertical-align: middle;
+			}
+			
+			canvas {
+				border: 1px solid black;
+			}
+			
+		</style>
+		
+	</head>
+	
+	
+	
+	<body>
+	
+		
+	
+	</body>
+	
+	
+	
+	<script>
+	
+		var WIDTH  = 640;
+		var HEIGHT = 480;
+	
+		var TEST_ITERATIONS = 1000;
+		
+		// Texture params
+		var TEXTURE_SCALE = 10;
+		var ITEMS_QUANTITY = 1000;
+		var RADIUS_MIN = 50;
+		var RADIUS_MAX = 320;
+		var WIDTH_MIN  = 100;
+		var WIDTH_MAX  = 640;
+		var HEIGHT_MIN = 100;
+		var HEIGHT_MAX = 640;
+		var RADIUS_DELTA = RADIUS_MAX - RADIUS_MIN;
+		var WIDTH_DELTA  = WIDTH_MAX  - WIDTH_MIN;
+		var HEIGHT_DELTA = HEIGHT_MAX - HEIGHT_MIN;
+		
+		// Tile params
+		var TILE_WIDTH  = 64;
+		var TILE_HEIGHT = 48;
+		var TILES_TOTAL = 50;
+		var TILE_COLUMNS = WIDTH  / TILE_WIDTH;
+		var TILE_ROWS    = HEIGHT / TILE_HEIGHT;
+		
+		var tiles = new Array(TILES_TOTAL);
+		var tilemap = (function(){
+			var result = new Array(TILE_ROWS);
+			for (var i = 0; i < TILE_ROWS; i++) {
+				result[i] = new Array(TILE_COLUMNS);
+				for (var j = 0; j < TILE_COLUMNS; j++) {
+					result[i][j] = (Math.random() * TILES_TOTAL) | 0;
+				}
+			}
+			return result;
+		})();
+		
+		
+	
+		// Main, visible (in future) context
+		var ctx = document.createElement("canvas").getContext("2d");
+		var width  = ctx.width  = ctx.canvas.width  = WIDTH;
+		var height = ctx.height = ctx.canvas.height = HEIGHT;
+		document.body.appendChild(ctx.canvas);
+		
+		// Texture
+		var texture = document.createElement("canvas").getContext("2d");
+		texture.width  = texture.canvas.width  = width  * TEXTURE_SCALE;
+		texture.height = texture.canvas.height = height * TEXTURE_SCALE;
+		texture.canvas.style.width  = "320px";
+		texture.canvas.style.height = "240px";
+		document.body.appendChild(texture.canvas);
+		
+		// Array with test results
+		var t = [];
+		
+		// Shortcuts
+		var c = texture.canvas;
+		var w = texture.width;
+		var h = texture.height;
+		var ww = width  + w;
+		var hh = height + h;
+		var x, y, i, j, k, tmj;
+		var time;
+		var rnd = Math.random;
+		
+		var w_w = w - width;
+		var h_h = h - height;
+		
+		var func = 0;
+		
+		var funcs = [
+		
+			function() {
+				for (i = 0; i < TEST_ITERATIONS; i++) {
+					x = -w + ww * rnd();
+					y = -h + hh * rnd();
+					ctx.clearRect(0, 0, width, height);
+					ctx.drawImage(c, x, y);
+				}
+			},
+			
+			function() {
+				for (i = 0; i < TEST_ITERATIONS; i++) {
+					x = w_w * rnd();
+					y = h_h * rnd();
+					ctx.clearRect(0, 0, width, height);
+					ctx.drawImage(c, x, y, width, height, 0, 0, width, height);
+				}
+			},
+			
+			function() {
+				for (i = 0; i < TEST_ITERATIONS; i++) {
+					ctx.clearRect(0, 0, width, height);
+					y = 0;
+					for (j = 0; j < TILE_ROWS; j++, y += TILE_HEIGHT) {
+						tmj = tilemap[j];
+						x = 0;
+						for (k = 0; k < TILE_COLUMNS; k++, x += TILE_WIDTH) {
+							ctx.putImageData(tiles[tmj[k]], x, y);
+						}
+					}
+				}
+			}
+			
+		];
+		
+		
+		
+		(function rndData() {
+			with (texture) {
+				for (var i = 0; i < ITEMS_QUANTITY; i++) {
+					var x = width  * rnd();
+					var y = height * rnd();
+					fillStyle = "rgb(" +
+						(255 * rnd() | 0) + ", " + 
+						(255 * rnd() | 0) + ", " + 
+						(255 * rnd() | 0) +
+					")"; 
+					
+					if (rnd() > 0.5) {
+						var r = RADIUS_MIN + RADIUS_DELTA * rnd();
+						beginPath();
+							arc(x, y, r, 0, 2 * Math.PI);
+						fill();
+					} else {
+						var rw = WIDTH_MIN  + WIDTH_DELTA  * rnd();
+						var rh = HEIGHT_MIN + HEIGHT_DELTA * rnd();
+						var a = 2 * Math.PI * rnd();
+						save();
+							rotate(a);
+							fillRect(x - rw / 2, y - rh / 2, rw, rh);
+						restore();
+					}
+				}
+			}
+			// update tiles
+			for (var i = 0; i < TILES_TOTAL; i++) {
+				var x = ((texture.width  / TILE_WIDTH  * rnd()) | 0) * TILE_WIDTH;
+				var y = ((texture.height / TILE_HEIGHT * rnd()) | 0) * TILE_HEIGHT;
+				tiles[i] = texture.getImageData(x, y, TILE_WIDTH, TILE_HEIGHT);
+			}
+		})();
+		
+		
+		// Looper
+		function repeat() {
+			time = new Date();
+				funcs[func]();
+			time = (new Date()) - time;
+			t.push(time);
+			func = (func + 1) % funcs.length;
+			console.log(func + " " + t[t.length - 1]);
+			setTimeout(repeat, 2500);
+		}
+		
+		// Launch loop
+		repeat();
+		
+		
+	</script>
+	
+</html>

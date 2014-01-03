@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+
+<html>
+
+	<head>
+	
+		<style type = "text/css">
+		
+			body {
+				background: black;
+				cursor: none;
+			}
+			
+			canvas, html, body {
+				padding: 0;
+				margin: 0;
+				overflow: hidden;
+			}
+			
+			input {
+				position: absolute;
+			}
+		
+		</style>
+		
+	</head>
+
+	<body>
+		<input onchange = "setFPS(this.value)" value = "20" />
+	</body>
+	
+	<script>
+	
+		var updInt;
+		var FPS = 20;
+		
+		function setFPS(fps) {
+			FPS = fps;
+			clearInterval(updInt);
+			updInt = setInterval(update, 1000 / FPS);
+		}
+		
+		
+		
+		var ctx    = document.createElement("canvas").getContext("2d");
+		var width  = ctx.canvas.width  = window.outerWidth;
+		var height = ctx.canvas.height = window.outerHeight;
+		
+		document.body.appendChild(ctx.canvas);
+		
+		var
+			x1 = width / 2, y1 = height / 2,
+			x2 = width / 2, y2 = height / 2,
+			alpha, distance, r = 50,
+			pinned = false;
+			
+		var g1 = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+		g1.addColorStop(  0, "rgba(255, 255, 255, 1)");
+		g1.addColorStop(0.2, "rgba(255, 255, 255, 1)");
+		g1.addColorStop(  1, "rgba(  0,   0,   0, 1)");
+		
+		var g2 = ctx.createLinearGradient(0, r, 0, -r);
+		g2.addColorStop(  0, "rgba(  0,   0,   0, 1)");
+		g2.addColorStop(0.4, "rgba(255, 255, 255, 1)");
+		g2.addColorStop(0.6, "rgba(255, 255, 255, 1)");
+		g2.addColorStop(  1, "rgba(  0,   0,   0, 1)");
+		
+		function update() {
+		
+			ctx.clearRect(0, 0, width, height);
+		
+			var dx = x2 - x1;
+			var dy = y2 - y1;
+			
+			if ((dx == 0) && (dy == 0)) {
+			
+				ctx.save();
+				
+					ctx.translate(x2, y2);
+					ctx.fillStyle = g1;
+					ctx.beginPath();
+						ctx.arc(0, 0, r, 0, 2 * Math.PI);
+					ctx.closePath();
+					ctx.fill();
+					
+				ctx.restore();
+				
+			} else {
+			
+				distance = Math.sqrt(dx * dx + dy * dy);
+				alpha = Math.atan2(dy, dx);
+				
+			
+				ctx.save();
+				
+					ctx.translate(x1, y1);
+					ctx.rotate(alpha);
+					ctx.lineWidth = r * 2;
+					
+					ctx.strokeStyle = g1;
+					
+					ctx.beginPath();
+						ctx.moveTo(-r, 0);
+						ctx.lineTo( 1, 0);
+					ctx.stroke();
+					
+					ctx.save();
+					
+						ctx.translate(distance, 0);
+						
+						ctx.beginPath();
+							ctx.moveTo(-1, 0);
+							ctx.lineTo( r, 0);
+						ctx.stroke();
+					
+					ctx.restore();
+					
+					ctx.strokeStyle = g2;
+					
+					ctx.beginPath();
+						ctx.moveTo(        0, 0);
+						ctx.lineTo( distance, 0);
+					ctx.stroke();
+					
+					
+					// Fade
+					var g3 = ctx.createRadialGradient(0, 0, r, 0, 0, distance + r);
+					g3.addColorStop(0, "rgba(0, 0, 0, 0)");
+					g3.addColorStop(1, "rgba(0, 0, 0, 1)");
+					ctx.strokeStyle = g3;
+					ctx.globalCompositeOperation = "source-over";
+					ctx.translate(distance, 0);
+					ctx.beginPath();
+						ctx.moveTo(  0, 0);
+						ctx.lineTo( -(distance + r), 0);
+					ctx.stroke();
+					
+				ctx.restore();
+				
+			}
+			
+			if (!pinned) {
+				x1 = x2;
+				y1 = y2;
+			}
+			
+		}
+		
+		
+		
+		window.oncontextmenu = function() { return false; };
+		ctx.canvas.onmousemove = function(e) {
+			x2 = e.offsetX;
+			y2 = e.offsetY;
+		};
+		ctx.canvas.onmousedown = function(e) {
+			if (e.which == 1) {
+				pinned = !pinned;
+			} else 
+			if (e.which == 3) {
+				x1 = e.offsetX;
+				y1 = e.offsetY;
+			}
+		};
+		
+		setFPS(FPS);
+	
+	</script>
+
+</html>
