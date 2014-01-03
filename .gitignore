@@ -1,1 +1,4 @@
-/OLD_client/media/gfx/*
+*.png
+*.jpg
+*.ttf
+*.otf
