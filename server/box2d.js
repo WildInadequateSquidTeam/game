@@ -27,12 +27,12 @@ var Box2D = {};
       && Object.prototype.__defineGetter__ instanceof Function
       && Object.prototype.__defineSetter__ instanceof Function)
    {
-      Object.defineProperty = function(obj, p, cfg) {
+      /*Object.defineProperty = function(obj, p, cfg) {
          if(cfg.get instanceof Function)
             obj.__defineGetter__(p, cfg.get);
          if(cfg.set instanceof Function)
             obj.__defineSetter__(p, cfg.set);
-      }
+      }*///http://paal.org/blog/2012/07/06/running-box2d-on-server-with-node-js-via-socket-io/#comment-1060881077
    }
    
    function emptyFn() {};
