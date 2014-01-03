@@ -1,5 +1,5 @@
 // Tools
-
+//ololo comment
 Math.D2R       = Math.PI / 180; // Multiply to convert degrees to radians.
 Math.R2D       = 180 / Math.PI; // Multiply to convert radians to degrees.
 Math.DOUBLE_PI = Math.PI * 2;   // 360 degrees in radians.
