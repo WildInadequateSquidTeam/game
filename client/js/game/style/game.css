@@ -1,0 +1,1 @@
+@font-face{font-family:"Liquidism";src:url("fonts/Liquidism.otf") format("opentype");}@font-face{font-family:"Days";src:url("fonts/Days.otf") format("opentype");}div.gameContainer{overflow:hidden;position:relative;}div.gameContainer div.layersContainer{position:absolute;width:100%;height:100%;}
