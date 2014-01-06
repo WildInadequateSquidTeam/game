@@ -435,11 +435,11 @@ for (var i = 0; i < 150; i++) {
 	);
 }
 
-
+var async = require("async");
 //TODO: take away into other module
 // === Launch physics ===
 // TODO: Optimize. This consumes bandwidth (WTH bandwidth in physics cycle???) 
-setInterval(function() {
+async.forever(function(cb) {
 
 	// Update world
 	world.Step(
@@ -498,8 +498,13 @@ setInterval(function() {
 		players: currentState.players,
 		bodies:  currentState.bodies
 	});
-
-}, 1000 / FPS);
+	setTimeout(cb, 1000 / FPS);
+}
+	,
+	function(err){
+		console.log("world.step failed. that means physics is no longer works, folks.");
+	}
+);
 
 
 // TODO: take out to networking
