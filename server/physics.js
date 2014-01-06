@@ -1,5 +1,9 @@
 var GRAVITY = 9.8;
 var PLAYER_SPEED = 0.5;
+var FPS = 30;
+var BOX2D_VELOCITY_ITERATIONS = 10;
+var BOX2D_POSITION_ITERATIONS = 10;
+
 
 var Box2D = require("./box2d.js");
 var async = require("async");
@@ -20,44 +24,62 @@ var
 	b2MouseJointDef = Box2D.Dynamics.Joints.b2MouseJointDef,
 	b2EdgeShape     = Box2D.Collision.Shapes.b2EdgeShape;
 
-	
+var bodyCounter = 0;
+
 var world = new b2World(
 	new b2Vec2(0, GRAVITY),
 	false
 );
 
-world.bodyCounter = 0;
+// if you wonder why not setInterval? using this leaves a way to callback on error
+// more callbacks for the god of callbacks
+// Executor service needed
+async.forever(function(cb){
+	world.Step(
+		1 / FPS,
+		BOX2D_VELOCITY_ITERATIONS,
+		BOX2D_POSITION_ITERATIONS
+	);
+	setTimeout(cb, 1000 / FPS);
+},
+	function(err){
+		console.log("world.step failed. that means physics is no longer works, folks.");
+	}
+);
 
-// create a queue object with concurrency 2
+/* *meditating on this usecase*
+ this should return fixture reference which is stored in level or player, but should it be like this?
+ + good for pimpMehPlayer(player){ player.body.m_body do stuff}
+ - help?
+*/
+exports.createBox = function(x, y, width, height, static, circle){
+	var bodyDef = new b2BodyDef;
+	bodyDef.type = static ? b2Body.b2_staticBody : b2Body.b2_dynamicBody;
+	bodyDef.position.x = x;
+	bodyDef.position.y = y;
 
-var q = async.queue(function (task, callback) {
-    console.log('whatsup ' + task.name);
-    callback();
-}, 2);
+	var fixDef = new b2FixtureDef;
+ 	fixDef.density = 1.5;        //
+ 	fixDef.friction = 0.5;      // parametrise these
+ 	fixDef.restitution = 0.25; //
 
-
-// assign a callback
-q.drain = function() {
-    console.log('all items have been processed');
+ 	if (circle) {
+ 		var circleShape = new b2CircleShape;
+		circleShape.m_radius = width;
+		fixDef.shape = circleShape;
+ 	} else {
+		fixDef.shape = new b2PolygonShape;
+		fixDef.shape.SetAsBox(width, height);
+ 	}
+	var body = world.CreateBody(bodyDef);
+ 	var fixture = body.CreateFixture(fixDef);
+ 	fixture.id = bodyCounter++;
+ 	body.id = fixture.id;
+ 	fixture.user_size = { 
+ 		width: width,
+ 		height: height
+ 	};
+ 	fixture.isCircle = circle;
+ 	//console.log(fixture);
+	return fixture;
 }
-
-// add some items to the queue
-
-q.push({name: '1'}, function (err) {
-    console.log('finished processing foo');
-});
-q.push({name: '2'}, function (err) {
-    console.log('finished processing bar');
-});
-
-// add some items to the queue (batch-wise)
-
-q.push([{name: '1'},{name: '2'},{name: '3'}], function (err) {
-    console.log('finished processing bar');
-});
-
-// add some items to the front of the queue
-
-q.unshift({name: 'z'}, function (err) {
-    console.log('finished processing bar');
-});

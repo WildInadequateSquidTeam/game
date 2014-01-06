@@ -129,8 +129,7 @@ clients.remove = function(client) {
 
 
 function Player(nickname, size, xmin, xmax, ymin, ymax, size) {
-	// TODO: no min and max , take away the creation of the body
-	// and well, the freaking keystate too, we have another way for this, arent we?
+	// TODO: no min and max , take out the creation of the body
 	if (size == undefined) {
 		size = 0.5;
 	}
@@ -155,6 +154,8 @@ function Player(nickname, size, xmin, xmax, ymin, ymax, size) {
 		size, size, false, true
 	);
 	
+	/* WTH these work directly with box2d >:[ ,should be like physics.getInfoAboutMehBodyCuzIAmDumbfuck()
+	*/
 	this.getPosition = function() {
 		return this.body.m_body.m_xf.position;
 	};
@@ -178,9 +179,12 @@ function Player(nickname, size, xmin, xmax, ymin, ymax, size) {
 	
 }
 
+
+//Should work for Logic module to use
+// and WTH with JSON.parseData[0] in every callback?
 function Client(clients, id, name, socket) {
 
-	// Link to clients array
+	// Reference to clients array
 	this.clients = clients;
 	
 	this.id = id;
@@ -300,7 +304,7 @@ function Client(clients, id, name, socket) {
 
 
 
-
+//Good for Logic module
 function Level() {
 
 	this.bodies = [];
@@ -434,8 +438,7 @@ for (var i = 0; i < 150; i++) {
 
 //TODO: take away into other module
 // === Launch physics ===
-// TODO: Optimize. This shit consumes bandwidth 
-// like little black pet from futurama eats shit
+// TODO: Optimize. This consumes bandwidth (WTH bandwidth in physics cycle???) 
 setInterval(function() {
 
 	// Update world
