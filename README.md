@@ -13,7 +13,7 @@ Just clone the repo, and run [server/main.js](https://github.com/WildInadequateS
 
 ###### Client
 Use [old client index.html](https://github.com/WildInadequateSquidTeam/game/blob/master/OLD_client/index.html) 
-to run the game.
+to run the game. Don't forget to change hardcoded IP. (nice :D) 
 
 
 That should work :D
