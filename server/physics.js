@@ -41,11 +41,7 @@ async.forever(function(cb){
 		BOX2D_POSITION_ITERATIONS
 	);
 	setTimeout(cb, 1000 / FPS);
-},
-	function(err){
-		console.log("world.step failed. that means physics is no longer works, folks.");
-	}
-);
+});
 
 /* *meditating on this usecase*
  this should return fixture reference which is stored in level or player, but should it be like this?
