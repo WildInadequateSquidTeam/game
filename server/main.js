@@ -349,7 +349,7 @@ var level = new Level();
 // TODO: another module
 // === Init Box2D ===
 
-var Box2D = require("./box2d.js");
+var Box2D = require("./lib/box2d");
 
 // Shorthand "imports"
 var

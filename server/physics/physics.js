@@ -5,7 +5,7 @@ var BOX2D_VELOCITY_ITERATIONS = 10;
 var BOX2D_POSITION_ITERATIONS = 10;
 
 
-var Box2D = require("./box2d.js");
+var Box2D = require("../lib/box2d.js");
 var async = require("async");
 
 // Shorthand "imports"
